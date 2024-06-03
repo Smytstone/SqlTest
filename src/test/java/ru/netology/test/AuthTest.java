@@ -17,7 +17,7 @@ public class AuthTest {
 
     @BeforeEach
     void setUp() {
-        loginPage = open("http//localhost:9999", LoginPage.class);
+        loginPage = open("http://localhost:9999", LoginPage.class);
     }
 
     @AfterEach
@@ -37,5 +37,65 @@ public class AuthTest {
         verificationPage.verifyPageVisibility();
         var verificationCode = SQLHelper.getVerificationCode();
         verificationPage.validVerify(verificationCode);
+    }
+
+    @Test
+    public void shouldNoAuthWithOldVerifyCode() {
+        var authInfo = DataHelper.getUser();
+        var verificationPage = loginPage.validLogin(authInfo);
+        verificationPage.verifyPageVisibility();
+        var verificationCode = SQLHelper.getVerificationCode();
+        verificationPage.validVerify(verificationCode);
+
+        open("http://localhost:9999/");
+        authInfo = DataHelper.getUser();
+        verificationPage = loginPage.validLogin(authInfo);
+        verificationCode = SQLHelper.getVerificationCode();
+        verificationPage.invalidVerify(verificationCode);
+        verificationPage.verifyErrorNotification();
+    }
+
+    @Test
+    public void shouldNotAuthWithRandomVerifyCode() {
+        var authInfo = DataHelper.getUser();
+        var verificationPage = loginPage.validLogin(authInfo);
+        var randomCode = DataHelper.generateRandomVerificationCode();
+        verificationPage.invalidVerify(String.valueOf(randomCode));
+    }
+
+    @Test
+    public void shouldNotAuthRandomUser() {
+        var authInfo = DataHelper.generateRandomUser();
+        var logPage = loginPage.validLogin(authInfo);
+        logPage.errorNotification();
+    }
+
+    @Test
+    public void shouldBlockUserAfterThreeAttemptsOfInputInvalidPassword() {
+        var authInfo = DataHelper.getUser();
+        var logPage = loginPage.invalidLogin(authInfo);
+        logPage.errorNotification();
+
+        open("http://localhost:9999/");
+        authInfo = DataHelper.getUser();
+        logPage = loginPage.invalidLogin(authInfo);
+        logPage.errorNotification();
+
+        open("http://localhost:9999/");
+        authInfo = DataHelper.getUser();
+        logPage = loginPage.invalidLogin(authInfo);
+        logPage.errorNotification();
+
+        open("http://localhost:9999/");
+        loginPage.validLogin(authInfo);
+        loginPage.blocked();
+    }
+
+    @Test
+    public void shouldNotificationWithEmptyVerifyCode() {
+        var authInfo = DataHelper.getUser();
+        var verificationPage = loginPage.validLogin(authInfo);
+        verificationPage.verify(null);
+        verificationPage.emptyCode();
     }
 }

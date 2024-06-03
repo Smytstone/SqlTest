@@ -15,13 +15,18 @@ public class VerifyPage {
         codeInput.should(visible);
     }
 
-    public void verifyErrorNotification(String expectedText) {
-        errorNotification.shouldHave(exactText(expectedText)).shouldBe(visible);
+    public void verifyErrorNotification() {
+        errorNotification.shouldHave(exactText("Ошибка! \nНеверно указан код! Попробуйте ещё раз.")).shouldBe(visible);
     }
 
     public DashboardPage validVerify(String verificationCode) {
         verify(verificationCode);
         return new DashboardPage();
+    }
+
+    public void invalidVerify(String verificationCode) {
+        verify(verificationCode);
+        errorNotification.shouldHave(exactText("Ошибка! \nНеверно указан код! Попробуйте ещё раз.")).shouldBe(visible);
     }
 
     public void verify(String verificationCode) {
@@ -31,5 +36,9 @@ public class VerifyPage {
 
     public void emptyCode() {
         codeInputEmptyNotification.should(text("Поле обязательно для заполнения"));
+    }
+
+    public void errorNotification() {
+        errorNotification.shouldHave(exactText("Ошибка! \nНеверно указан логин или пароль")).shouldBe(visible);
     }
 }
